@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Você quer ver ele?</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: white;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    .glitch {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: black;
+      animation: glitch 0.2s infinite;
+      z-index: 1;
+    }
+
+    @keyframes glitch {
+      0% { transform: translate(0, 0); }
+      20% { transform: translate(5px, -2px); }
+      40% { transform: translate(-3px, 3px); }
+      60% { transform: translate(2px, -4px); }
+      80% { transform: translate(-2px, 1px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    .eyes {
+      position: absolute;
+      z-index: 2;
+      animation: float 5s infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(10px); }
+      100% { transform: translateY(0); }
+    }
+
+    .msg {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      text-align: center;
+      font-size: 24px;
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border: 2px solid red;
+    }
+
+    .btns {
+      margin-top: 20px;
+    }
+
+    button {
+      background: black;
+      color: white;
+      border: 1px solid red;
+      padding: 10px;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<audio id="audio" src="terror.mp3" autoplay loop></audio>
+
+<div class="glitch"></div>
+
+<!-- olhos -->
+<img class="eyes" src="olho.png" style="top: 10%; left: 20%; width: 80px;">
+<img class="eyes" src="olho.png" style="top: 50%; left: 60%; width: 100px;">
+<img class="eyes" src="olho.png" style="top: 80%; left: 30%; width: 70px;">
+
+<!-- pergunta RPG -->
+<div class="msg" id="pergunta">
+  <p>Você quer ver ele?</p>
+  <div class="btns">
+    <button onclick="responder('sim')">Sim</button>
+    <button onclick="responder('nao')">Não</button>
+  </div>
+</div>
+
+<script>
+  const audio = document.getElementById('audio');
+  const msgBox = document.getElementById('pergunta');
+
+  function responder(resp) {
+    if (resp === 'sim') {
+      audio.volume = 1;
+      msgBox.innerHTML = `
+        <p>Solicitando acesso à câmera...</p>
+      `;
+      // Aqui virá o código real da webcam + filtros
+      navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}})
+        .then(stream => {
+          const video = document.createElement("video");
+          video.srcObject = stream;
+          video.autoplay = true;
+          video.style.position = "absolute";
+          video.style.top = "0";
+          video.style.left = "0";
+          video.style.width = "100%";
+          video.style.height = "100%";
+          video.style.objectFit = "cover";
+          video.style.filter = "contrast(1.4) brightness(0.8) hue-rotate(330deg)";
+          video.style.zIndex = 2;
+          document.body.appendChild(video);
+
+          setTimeout(() => {
+            msgBox.innerHTML = `<p>Agora nós dois podemos vê-lo.</p>`;
+          }, 3000);
+        })
+        .catch(() => {
+          msgBox.innerHTML = `<p>Permissão negada... ela não vai gostar disso</p>`;
+        });
+
+    } else {
+      // comportamento perturbador se clicar em "não"
+      let cont = 0;
+      msgBox.innerHTML = `<p>Por que não?</p>`;
+      const frases = ["Tem certeza?", "Ela está esperando...", "Ele é lindo pessoalmente...", "Por que recusar?", "Diga sim..."];
+      const interval = setInterval(() => {
+        if (cont < frases.length) {
+          msgBox.innerHTML += `<br>${frases[cont++]}`;
+          audio.volume = Math.max(0, audio.volume - 0.15); // abaixa o volume
+        } else {
+          clearInterval(interval);
+          msgBox.innerHTML = `
+            <p>Vamos tentar de novo...</p>
+            <div class="btns">
+              <button onclick="responder('sim')">Sim</button>
+              <button onclick="responder('nao')">Não</button>
+            </div>
+          `;
+          audio.volume = 1;
+        }
+      }, 1000);
+    }
+  }
+</script>
+
+</body>
+</html>
